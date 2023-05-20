@@ -1,29 +1,44 @@
-const users = [];
-
-let id = 0;
+const usersModel = require('../models/user').default;
 
 const getUserById = (req, res) => {
-  const user = users.find((use) => use.id === Number(req.params.user_id));
-  if (!user) {
-    res.status(404).send({ massege: 'Пользователь не найден' });
-    return;
-  }
-  res.send(user);
+  usersModel.findById(req.params.user_id)
+    .orFail(() => {
+      throw new Error('NotFound');
+    })
+    .then((user) => {
+      res.status(200).send(user);
+    })
+    .catch((error) => {
+      res.status(500).send({
+        massege: 'Ошибка при обработке запроса',
+        error: error.massege,
+        stack: error.stack,
+      });
+    });
 };
 
 const crateUser = (req, res) => {
-  id += 1;
-  const newUser = {
-    ...req.body,
-    id,
-  };
-  users.push(newUser);
-
-  res.send(newUser);
+  usersModel.create(req.body).then((user) => {
+    res.status(200).send(user);
+  }).catch((error) => {
+    res.status(500).send({
+      massege: 'Ошибка при обработке запроса',
+      error: error.massege,
+      stack: error.stack,
+    });
+  });
 };
 
 const getUsers = (req, res) => {
-  res.send(users);
+  usersModel.find({}).then((users) => {
+    res.send(users);
+  }).catch((error) => {
+    res.status(500).send({
+      massege: 'Ошибка при обработке запроса',
+      error: error.massege,
+      stack: error.stack,
+    });
+  });
 };
 
 module.exports = {
