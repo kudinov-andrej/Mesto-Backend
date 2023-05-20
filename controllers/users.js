@@ -1,18 +1,21 @@
-const usersModel = require('../models/user').default;
+const usersModel = require('../models/user');
 
 const getUserById = (req, res) => {
-  usersModel.findById(req.params.user_id)
+  usersModel
+    .findById(req.params.userId)
     .orFail(() => {
-      throw new Error('NotFound');
+      const error = new Error('Пользователь не найден');
+      error.name = 'UserNotFoundError';
+      throw error;
     })
     .then((user) => {
-      res.status(200).send(user);
+      res.send(user);
     })
-    .catch((error) => {
+    .catch((err) => {
       res.status(500).send({
-        massege: 'Ошибка при обработке запроса',
-        error: error.massege,
-        stack: error.stack,
+        message: 'Internal Server Error',
+        err: err.message,
+        stack: err.stack,
       });
     });
 };
@@ -29,16 +32,17 @@ const crateUser = (req, res) => {
   });
 };
 
-const getUsers = (req, res) => {
-  usersModel.find({}).then((users) => {
+const getUsers = async (req, res) => {
+  try {
+    const users = await usersModel.find({});
     res.send(users);
-  }).catch((error) => {
+  } catch (err) {
     res.status(500).send({
-      massege: 'Ошибка при обработке запроса',
-      error: error.massege,
-      stack: error.stack,
+      message: 'Internal Server Error',
+      err: err.message,
+      stack: err.stack,
     });
-  });
+  }
 };
 
 module.exports = {
